@@ -1,4 +1,8 @@
-<img src="koi/koi.gif" width="256" alt="My koi" />
+<p align="center">
+  <a href="https://github.com/PramudithaN/git-tulkun">
+    <img src="https://raw.githubusercontent.com/MustafaKhantheMK/MustafaKhantheMK/output/tulkun/tulkun.gif" width="640" alt="MustafaKhantheMK's git-tulkun" />
+  </a>
+</p>
 
 <!--
 **MustafaKhantheMK/MustafaKhantheMK** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
