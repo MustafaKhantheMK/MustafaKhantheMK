@@ -1,10 +1,9 @@
-# Copy into your profile repository as .github/workflows/koi.yml, then embed
-# <img src="koi/koi.gif" width="256" alt="My koi"> in its README.md.
-name: Koi
+
+name: Draw koi
 
 on:
   schedule:
-    # Just after midnight UTC, so the koi shows the day that just ended.
+    # Just after midnight UTC
     - cron: "20 0 * * *"
   workflow_dispatch:
   push:
@@ -20,10 +19,66 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
       - uses: yalongwastaken/git-koi@v1
         with:
           body: gold
           output-dir: koi
+
+      # NEW: Crop empty transparent space around the koi
+      - name: Crop koi GIF
+        shell: bash
+        run: |
+          python -m pip install Pillow
+          python - <<'PY'
+          from PIL import Image
+
+          path = "koi/koi.gif"
+          im = Image.open(path)
+
+          frames = []
+          durations = []
+
+          for i in range(im.n_frames):
+              im.seek(i)
+              frames.append(im.convert("RGBA").copy())
+              durations.append(im.info.get("duration", 100))
+
+          bbox = None
+          for frame in frames:
+              box = frame.getchannel("A").getbbox()
+              if box:
+                  if bbox is None:
+                      bbox = box
+                  else:
+                      bbox = (
+                          min(bbox[0], box[0]),
+                          min(bbox[1], box[1]),
+                          max(bbox[2], box[2]),
+                          max(bbox[3], box[3]),
+                      )
+
+          if bbox:
+              padding = 12
+              bbox = (
+                  max(0, bbox[0] - padding),
+                  max(0, bbox[1] - padding),
+                  min(im.width, bbox[2] + padding),
+                  min(im.height, bbox[3] + padding),
+              )
+
+              cropped = [frame.crop(bbox) for frame in frames]
+              cropped[0].save(
+                  path,
+                  save_all=True,
+                  append_images=cropped[1:],
+                  duration=durations,
+                  loop=0,
+                  disposal=2,
+                  optimize=False,
+              )
+          PY
+
       - name: Commit the koi if it changed
         shell: bash
         run: |
@@ -36,3 +91,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit --quiet --message "koi: draw the day's koi"
           git push --quiet
+
